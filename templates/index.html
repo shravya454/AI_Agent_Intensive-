@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigQuery Release Explorer</title>
+    <meta name="description" content="Stay up to date with the latest Google BigQuery release notes and share updates directly to Twitter/X.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS stylesheet -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Navigation -->
+        <aside class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 12H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M12 8V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                    <div class="logo-text">
+                        <span class="logo-brand">BigQuery</span>
+                        <span class="logo-suffix">Notes</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-content">
+                <!-- Search -->
+                <div class="search-box">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Search updates...">
+                </div>
+
+                <!-- Stats and Filters -->
+                <nav class="sidebar-nav">
+                    <div class="nav-section-title">Categories</div>
+                    <ul class="filter-list" id="category-filters">
+                        <li class="filter-item active" data-filter="all">
+                            <span class="filter-label"><i data-lucide="layers" class="filter-icon"></i> All Updates</span>
+                            <span class="badge badge-all" id="count-all">0</span>
+                        </li>
+                        <li class="filter-item" data-filter="Feature">
+                            <span class="filter-label"><i data-lucide="sparkles" class="filter-icon"></i> Features</span>
+                            <span class="badge badge-feature" id="count-feature">0</span>
+                        </li>
+                        <li class="filter-item" data-filter="Change">
+                            <span class="filter-label"><i data-lucide="refresh-cw" class="filter-icon"></i> Changes</span>
+                            <span class="badge badge-change" id="count-change">0</span>
+                        </li>
+                        <li class="filter-item" data-filter="Deprecation">
+                            <span class="filter-label"><i data-lucide="alert-triangle" class="filter-icon"></i> Deprecations</span>
+                            <span class="badge badge-deprecation" id="count-deprecation">0</span>
+                        </li>
+                        <li class="filter-item" data-filter="Issue">
+                            <span class="filter-label"><i data-lucide="slash" class="filter-icon"></i> Issues</span>
+                            <span class="badge badge-issue" id="count-issue">0</span>
+                        </li>
+                        <li class="filter-item" data-filter="Bug Fix">
+                            <span class="filter-label"><i data-lucide="check-circle-2" class="filter-icon"></i> Bug Fixes</span>
+                            <span class="badge badge-bugfix" id="count-bugfix">0</span>
+                        </li>
+                        <li class="filter-item" data-filter="General">
+                            <span class="filter-label"><i data-lucide="info" class="filter-icon"></i> General</span>
+                            <span class="badge badge-general" id="count-general">0</span>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="theme-info">
+                    <i data-lucide="terminal" class="theme-icon"></i>
+                    <span>BigQuery Feed Explorer v1.0</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Feed Area -->
+        <main class="app-main">
+            <header class="main-header">
+                <div class="header-titles">
+                    <h1>BigQuery Release Notes</h1>
+                    <p class="header-subtitle">Stay updated with Google Cloud's latest data warehouse enhancements</p>
+                </div>
+                <div class="header-actions">
+                    <div class="sync-status">
+                        <span class="status-indicator"></span>
+                        <span id="sync-time-label">Synced: Not loaded</span>
+                    </div>
+                    <button class="btn btn-primary" id="refresh-btn">
+                        <i data-lucide="refresh-cw" class="btn-spinner" id="refresh-spinner"></i>
+                        <span>Refresh Notes</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Feed Content -->
+            <div class="feed-container">
+                <!-- Loading State -->
+                <div class="loading-state" id="feed-loading">
+                    <div class="spinner-container">
+                        <div class="loading-spinner"></div>
+                    </div>
+                    <h3>Fetching latest release notes...</h3>
+                    <p>Connecting to Google Cloud docs feed...</p>
+                </div>
+
+                <!-- Error State -->
+                <div class="error-state hidden" id="feed-error">
+                    <i data-lucide="alert-octagon" class="error-icon"></i>
+                    <h3>Failed to load release notes</h3>
+                    <p id="error-message">An error occurred while fetching the XML feed.</p>
+                    <button class="btn btn-secondary mt-4" id="retry-btn">
+                        <i data-lucide="rotate-ccw"></i>
+                        <span>Try Again</span>
+                    </button>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state hidden" id="feed-empty">
+                    <i data-lucide="search-code" class="empty-icon"></i>
+                    <h3>No updates found</h3>
+                    <p>No release notes match your search criteria or category filter.</p>
+                    <button class="btn btn-secondary mt-4" id="clear-filters-btn">
+                        <span>Clear Filters</span>
+                    </button>
+                </div>
+
+                <!-- Actual Feed Cards List -->
+                <div class="notes-feed hidden" id="notes-feed">
+                    <!-- Cards will be dynamically injected here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Twitter Composer Modal -->
+    <div class="modal-backdrop hidden" id="tweet-modal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-title-wrapper">
+                    <i data-lucide="twitter" class="twitter-blue-icon"></i>
+                    <h2>Compose Update Tweet</h2>
+                </div>
+                <button class="btn-close" id="modal-close-btn" aria-label="Close modal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="composer-split">
+                    <!-- Edit Panel -->
+                    <div class="composer-edit-panel">
+                        <label for="tweet-textarea" class="input-label">Edit Tweet Draft</label>
+                        <div class="textarea-wrapper">
+                            <textarea id="tweet-textarea" placeholder="What's happening?" maxlength="1000"></textarea>
+                        </div>
+                        <div class="character-counter-row">
+                            <div class="char-count-details">
+                                <span id="char-count">0</span> / 280 characters
+                            </div>
+                            <!-- Circular Progress Indicator -->
+                            <div class="progress-ring-container">
+                                <svg class="progress-ring" width="28" height="28">
+                                    <circle class="progress-ring__circle-bg" stroke="#e2e8f0" stroke-width="3" fill="transparent" r="11" cx="14" cy="14"/>
+                                    <circle class="progress-ring__circle" stroke="#1da1f2" stroke-width="3" fill="transparent" r="11" cx="14" cy="14"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="warning-banner hidden" id="char-warning">
+                            <i data-lucide="alert-circle"></i>
+                            <span>Character count exceeds X/Twitter's standard 280-character limit! Consider truncating or posting as a thread.</span>
+                        </div>
+                    </div>
+
+                    <!-- Twitter Post Preview Panel (The WOW factor) -->
+                    <div class="composer-preview-panel">
+                        <div class="preview-label">Live Preview on X</div>
+                        
+                        <div class="tweet-card-preview">
+                            <div class="tweet-header">
+                                <div class="tweet-avatar">
+                                    <svg viewBox="0 0 24 24" class="bq-svg-avatar" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect width="24" height="24" rx="12" fill="#1a73e8"/>
+                                        <path d="M7 6H17V8H7V6ZM7 11H17V13H7V11ZM7 16H14V18H7V16Z" fill="white"/>
+                                    </svg>
+                                </div>
+                                <div class="tweet-user-info">
+                                    <div class="tweet-user-name">
+                                        <span>BigQuery Release Feed</span>
+                                        <svg viewBox="0 0 24 24" class="verified-badge" fill="currentColor">
+                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="tweet-user-handle">@bq_releases · Just now</div>
+                                </div>
+                            </div>
+                            
+                            <div class="tweet-content" id="tweet-preview-text">
+                                <!-- Pre-populated draft goes here -->
+                            </div>
+                            
+                            <!-- Simulated Tweet Link card -->
+                            <div class="tweet-link-card">
+                                <div class="tweet-link-image">
+                                    <svg viewBox="0 0 24 24" class="cloud-image-svg" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect width="24" height="24" fill="#f1f3f4"/>
+                                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" fill="#4285f4"/>
+                                    </svg>
+                                </div>
+                                <div class="tweet-link-details">
+                                    <div class="tweet-link-domain">cloud.google.com</div>
+                                    <div class="tweet-link-title">Google BigQuery Release Notes</div>
+                                    <div class="tweet-link-desc">Official documentation feed for Google Cloud BigQuery release updates and changelog.</div>
+                                </div>
+                            </div>
+
+                            <div class="tweet-footer-icons">
+                                <div class="tweet-action-icon"><i data-lucide="message-circle" class="preview-footer-icon"></i><span>4</span></div>
+                                <div class="tweet-action-icon"><i data-lucide="repeat" class="preview-footer-icon"></i><span>12</span></div>
+                                <div class="tweet-action-icon"><i data-lucide="heart" class="preview-footer-icon"></i><span>42</span></div>
+                                <div class="tweet-action-icon"><i data-lucide="bar-chart-3" class="preview-footer-icon"></i><span>1.2K</span></div>
+                                <div class="tweet-action-icon"><i data-lucide="share" class="preview-footer-icon"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-cancel-btn">Cancel</button>
+                <button class="btn btn-primary btn-tweet-submit" id="tweet-intent-btn">
+                    <i data-lucide="twitter"></i>
+                    <span>Share on X / Twitter</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast hidden" id="toast">
+        <i data-lucide="check" class="toast-check-icon"></i>
+        <span class="toast-message" id="toast-message">Copied to clipboard!</span>
+    </div>
+
+    <!-- Main JavaScript file -->
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
